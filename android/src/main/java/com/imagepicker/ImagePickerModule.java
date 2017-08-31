@@ -426,21 +426,16 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     int initialWidth = options.outWidth;
     int initialHeight = options.outHeight;
 
-    // don't create a new file if contraint are respected
-    if (((initialWidth < maxWidth && maxWidth > 0) || maxWidth == 0) && ((initialHeight < maxHeight && maxHeight > 0) || maxHeight == 0) && quality == 100 && (rotation == 0 || currentRotation == rotation)) {
-      response.putInt("width", initialWidth);
-      response.putInt("height", initialHeight);
+    // resize the image all the time, because of the samsung bug
+    File resized = getResizedImage(realPath, initialWidth, initialHeight);
+    if (resized == null) {
+      response.putString("error", "Can't resize the image");
     } else {
-      File resized = getResizedImage(realPath, initialWidth, initialHeight);
-      if (resized == null) {
-        response.putString("error", "Can't resize the image");
-      } else {
-         realPath = resized.getAbsolutePath();
-         uri = Uri.fromFile(resized);
-         BitmapFactory.decodeFile(realPath, options);
-         response.putInt("width", options.outWidth);
-         response.putInt("height", options.outHeight);
-      }
+        realPath = resized.getAbsolutePath();
+        uri = Uri.fromFile(resized);
+        BitmapFactory.decodeFile(realPath, options);
+        response.putInt("width", options.outWidth);
+        response.putInt("height", options.outHeight);
     }
 
     response.putString("uri", uri.toString());
