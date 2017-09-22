@@ -209,6 +209,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     }
 
     if (!permissionsCheck(currentActivity)) {
+      response.putString("error", "Need permission");
+      callback.invoke(response);
       return;
     }
 
