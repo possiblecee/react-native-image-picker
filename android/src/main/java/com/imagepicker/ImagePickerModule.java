@@ -208,7 +208,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
       return;
     }
 
-    if (!permissionsCheck(currentActivity)) {
+    if (!permissionsCheck(currentActivity, Source.CAMERA)) {
       response.putString("error", "Need permission");
       callback.invoke(response);
       return;
@@ -265,8 +265,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
       return;
     }
 
-    if (!permissionsCheck(currentActivity)) {
-      response.putString("error", "Need permission");
+    if (!permissionsCheck(currentActivity, Source.LIBRARY)) {
+      response = Arguments.createMap();
+      response.putString("error", "missing storage permission");
       callback.invoke(response);
       return;
     }
@@ -491,16 +492,31 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     }
   }
 
-  private boolean permissionsCheck(Activity activity) {
+  private enum Source {
+    CAMERA,
+    LIBRARY,
+    BOTH
+  }
+
+  private boolean permissionsCheck(Activity activity, Source source) {
     int writePermission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
     int cameraPermission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.CAMERA);
-    if (writePermission != PackageManager.PERMISSION_GRANTED || cameraPermission != PackageManager.PERMISSION_GRANTED) {
-      String[] PERMISSIONS = {
-              Manifest.permission.WRITE_EXTERNAL_STORAGE,
-              Manifest.permission.CAMERA
-      };
-      ActivityCompat.requestPermissions(activity, PERMISSIONS, 1);
-      return false;
+    switch (source) {
+      case BOTH:
+        if (writePermission != PackageManager.PERMISSION_GRANTED || cameraPermission != PackageManager.PERMISSION_GRANTED) {
+          return false;
+        }
+        break;
+      case CAMERA:
+        if (cameraPermission != PackageManager.PERMISSION_GRANTED) {
+          return false;
+        }
+        break;
+      case LIBRARY:
+        if (writePermission != PackageManager.PERMISSION_GRANTED) {
+          return false;
+        }
+        break;
     }
     return true;
   }
